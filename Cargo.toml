@@ -1,0 +1,16 @@
+[package]
+authors = [
+    "Ulf Lilleengen <ulf.lilleengen@gmail.com>",
+]
+edition = "2018"
+name = "supersilver"
+version = "0.1.0"
+
+[dependencies]
+log = "0.4"
+env_logger = "0.8"
+drogue-device = { git = "https://github.com/drogue-iot/drogue-device.git", features = ["log", "std"] }
+linux-embedded-hal = "0.3.0"
+
+[patch.crates-io]
+cortex-m = {git = "https://github.com/rust-embedded/cortex-m.git", branch = "master", features = ["device"]}
