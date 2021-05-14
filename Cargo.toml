@@ -11,6 +11,9 @@ log = "0.4"
 env_logger = "0.8"
 drogue-device = { git = "https://github.com/drogue-iot/drogue-device.git", features = ["log", "std"] }
 linux-embedded-hal = "0.3.0"
+rotary-encoder-hal = "0.3.0"
+embedded-hal = { version = "0.2.4", features = ["unproven"]}
+sysfs_gpio = "0.5"
 
 [patch.crates-io]
 cortex-m = {git = "https://github.com/rust-embedded/cortex-m.git", branch = "master", features = ["device"]}

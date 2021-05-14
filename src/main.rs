@@ -6,59 +6,13 @@
 #![feature(type_alias_impl_trait)]
 #![feature(concat_idents)]
 
-use core::future::Future;
-use core::pin::Pin;
-use core::sync::atomic::{AtomicU32, Ordering};
 use drogue_device::*;
 use linux_embedded_hal::Pin as PiPin;
-
-pub struct MyActor {
-    name: &'static str,
-    counter: Option<&'static AtomicU32>,
-}
-
-impl MyActor {
-    pub fn new(name: &'static str) -> Self {
-        Self {
-            name,
-            counter: None,
-        }
-    }
-}
-
-impl Actor for MyActor {
-    type Configuration = &'static AtomicU32;
-    type Message<'a> = SayHello<'a>;
-    type OnStartFuture<'a> = impl Future<Output = ()> + 'a;
-    type OnMessageFuture<'a> = impl Future<Output = ()> + 'a;
-
-    fn on_mount(&mut self, config: Self::Configuration) {
-        self.counter.replace(config);
-    }
-
-    fn on_start(self: Pin<&'_ mut Self>) -> Self::OnStartFuture<'_> {
-        async move { log::info!("[{}] started!", self.name) }
-    }
-
-    fn on_message<'m>(
-        self: Pin<&'m mut Self>,
-        message: Self::Message<'m>,
-    ) -> Self::OnMessageFuture<'m> {
-        async move {
-            let count = self.counter.unwrap().fetch_add(1, Ordering::SeqCst);
-            log::info!("[{}] hello {}: {}", self.name, message.0, count);
-        }
-    }
-}
-
-pub struct SayHello<'m>(&'m str);
+use rotary_encoder_hal::{Direction, Rotary};
+use sysfs_gpio::Direction as GpioDirection;
 
 #[derive(Device)]
-pub struct MyDevice {
-    counter: AtomicU32,
-    a: ActorContext<'static, MyActor>,
-    b: ActorContext<'static, MyActor>,
-}
+pub struct MyDevice {}
 
 #[drogue::main]
 async fn main(context: DeviceContext<MyDevice>) {
@@ -67,25 +21,59 @@ async fn main(context: DeviceContext<MyDevice>) {
         .format_timestamp_nanos()
         .init();
 
-    let led_blue = PiPin::new(12);
+    let rot_a = PiPin::new(5);
+    let rot_b = PiPin::new(6);
+    let led = [PiPin::new(16), PiPin::new(12), PiPin::new(25)];
+    for l in led.iter() {
+        l.export().expect("Error exporting led pin");
+        l.set_direction(GpioDirection::Out)
+            .expect("Error setting led direction");
+    }
 
-    context.configure(MyDevice {
-        counter: AtomicU32::new(0),
-        a: ActorContext::new(MyActor::new("a")),
-        b: ActorContext::new(MyActor::new("b")),
-    });
+    rot_a.export().expect("Error exporting pin rot_a");
+    rot_a
+        .set_direction(GpioDirection::In)
+        .expect("Error setting pin direction rot_a");
 
-    let (a_addr, b_addr) = context.mount(|device| {
-        let a_addr = device.a.mount(&device.counter);
-        let b_addr = device.b.mount(&device.counter);
-        (a_addr, b_addr)
-    });
+    rot_b.export().expect("Error exporting pin rot_b");
+    rot_b
+        .set_direction(GpioDirection::In)
+        .expect("Error setting pin direction rot_b");
 
+    context.configure(MyDevice {});
+
+    context.mount(|_| {});
+
+    let mut position = 0;
+    let mut rotary = Rotary::new(rot_a, rot_b);
     loop {
-        time::Timer::after(time::Duration::from_secs(1)).await;
+        let old_pos = position;
+        match rotary.update().unwrap() {
+            Direction::Clockwise => position += 1,
+            Direction::CounterClockwise => position -= 1,
+            Direction::None => {}
+        }
+        if old_pos != position {
+            for i in 0..led.len() {
+                if i == position % 3 {
+                    led[i].set_value(1).unwrap();
+                } else {
+                    led[i].set_value(0).unwrap();
+                }
+            }
+            log::info!("Position: {}", position);
+        }
+        /*
+        led_blue
+            .set_value(value % 2)
+            .expect("Error setting led value");
+
         // Send that completes immediately when message is enqueued
         a_addr.notify(SayHello("World")).unwrap();
         // Send that waits until message is processed
         b_addr.request(SayHello("You")).unwrap().await;
+
+        value += 1;
+        */
     }
 }
