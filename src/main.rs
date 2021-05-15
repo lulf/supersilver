@@ -6,6 +6,7 @@
 #![feature(type_alias_impl_trait)]
 #![feature(concat_idents)]
 
+use core::cmp::{max, min};
 use drogue_device::*;
 use linux_embedded_hal::Pin as PiPin;
 use rotary_encoder_hal::{Direction, Rotary};
@@ -44,18 +45,18 @@ async fn main(context: DeviceContext<MyDevice>) {
 
     context.mount(|_| {});
 
-    let mut position = 0;
+    let mut position: i8 = 0;
     let mut rotary = Rotary::new(rot_a, rot_b);
     loop {
-        let old_pos = position;
+        let old_position = position;
         match rotary.update().unwrap() {
-            Direction::Clockwise => position += 1,
-            Direction::CounterClockwise => position -= 1,
+            Direction::Clockwise => position = min(100, position + 1),
+            Direction::CounterClockwise => position = max(0, position - 1),
             Direction::None => {}
         }
-        if old_pos != position {
+        if old_position != position {
             for i in 0..led.len() {
-                if i == position % 3 {
+                if i == (position as usize) % 3 {
                     led[i].set_value(1).unwrap();
                 } else {
                     led[i].set_value(0).unwrap();
