@@ -61,6 +61,7 @@ async fn main(context: DeviceContext<MyDevice>) {
     let mut rotary = Rotary::new(rot_a, rot_b);
     loop {
         // Debounce button
+        /*
         if button.get_value().unwrap() != 0 && !pressed {
             log::info!("Button pressed");
             pressed = true;
@@ -78,13 +79,14 @@ async fn main(context: DeviceContext<MyDevice>) {
         } else if button.get_value().unwrap() == 0 {
             pressed = false;
         }
+        */
 
         // Check volume position
         if !muted {
             let old_position = position;
             match rotary.update().unwrap() {
-                Direction::Clockwise => position = min(255, position + 10),
-                Direction::CounterClockwise => position = max(0, position - 10),
+                Direction::Clockwise => position = min(255, position + 5),
+                Direction::CounterClockwise => position = max(0, position - 5),
                 Direction::None => {}
             }
             if old_position != position {
