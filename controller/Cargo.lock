@@ -1149,6 +1149,7 @@ dependencies = [
  "embassy-executor",
  "embassy-rp",
  "embassy-time",
+ "embedded-hal 1.0.0",
  "panic-probe",
 ]
 
