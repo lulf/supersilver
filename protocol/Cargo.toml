@@ -1,0 +1,10 @@
+[package]
+name = "supersilver-protocol"
+version = "0.1.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+description = "Shared message types for Supersilver controller protocol"
+
+[dependencies]
+serde = { version = "1", default-features = false, features = ["derive"] }
+postcard = "1"
