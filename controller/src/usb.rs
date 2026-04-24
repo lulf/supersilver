@@ -28,6 +28,10 @@ pub async fn usb_write_task(mut class: CdcAcmClass<'static, Driver<'static, USB>
             let current = ENCODER_STATE.lock(|s| s.get());
 
             if current.left != last.left || current.right != last.right {
+                info!(
+                    "Sending encoder state: left={=i32}, right={=i32}",
+                    current.left, current.right
+                );
                 last = current;
 
                 let mut buf = [0u8; 32];

@@ -6,8 +6,11 @@ use tokio_serial::SerialPortBuilderExt;
 
 #[tokio::main]
 async fn main() {
-    let port_name = std::env::args().nth(1).unwrap_or_else(|| {
-        eprintln!("Usage: host <serial-port>");
+    let args: Vec<String> = std::env::args().collect();
+    let test_mode = args.iter().any(|a| a == "--test");
+    let port_name = args.iter().skip(1).find(|a| *a != "--test").cloned().unwrap_or_else(|| {
+        eprintln!("Usage: host [--test] <serial-port>");
+        eprintln!("  --test  Print volume level instead of calling amixer");
         eprintln!("Available ports:");
         if let Ok(ports) = tokio_serial::available_ports() {
             for p in &ports {
@@ -31,6 +34,7 @@ async fn main() {
     println!("Listening for encoder state...");
 
     let mut prev_right: Option<i32> = None;
+    let mut volume: i32 = 50;
 
     while let Some(result) = reader.next().await {
         match result {
@@ -40,7 +44,12 @@ async fn main() {
                 if let Some(prev) = prev_right {
                     let delta = state.right - prev;
                     if delta != 0 {
-                        adjust_volume(delta);
+                        if test_mode {
+                            volume = (volume + delta).clamp(0, 100);
+                            println!("volume: {volume}%");
+                        } else {
+                            adjust_volume(delta);
+                        }
                     }
                 }
                 prev_right = Some(state.right);
