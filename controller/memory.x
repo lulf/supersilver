@@ -1,9 +1,9 @@
 MEMORY {
     /* BOOT2 region is only used for computing flash offsets (bootloader handles boot2) */
     BOOT2            : ORIGIN = 0x10000000, LENGTH = 0x100
-    BOOTLOADER_STATE : ORIGIN = 0x1000C000, LENGTH = 4K
-    FLASH            : ORIGIN = 0x1000D000, LENGTH = 512K
-    DFU              : ORIGIN = 0x1008D000, LENGTH = 516K
+    BOOTLOADER_STATE : ORIGIN = 0x10014000, LENGTH = 4K
+    FLASH            : ORIGIN = 0x10015000, LENGTH = 256K
+    DFU              : ORIGIN = 0x10055000, LENGTH = 260K
     RAM              : ORIGIN = 0x20000000, LENGTH = 264K
 }
 
