@@ -54,6 +54,7 @@ async fn run_encoder<I: I2cInterface>(i2c: I, side: Side, name: &'static str) {
     info!("[{}] ready (addr {=u8:#x})", name, encoder.addr());
 
     let mut last_pos: i32 = 0;
+    let mut last_pressed: bool = false;
     loop {
         match encoder.position(0) {
             Ok(pos) if pos != last_pos => {
@@ -71,6 +72,27 @@ async fn run_encoder<I: I2cInterface>(i2c: I, side: Side, name: &'static str) {
             Ok(_) => {}
             Err(_) => warn!("[{}] encoder: read error", name),
         }
+
+        // seesaw `digital_read` inverts the raw GPIO level, so for an InputPullup
+        // button it returns true when pressed (pin LOW) and false when released.
+        match encoder.button(0) {
+            Ok(pressed) => {
+                if pressed != last_pressed {
+                    info!("[{}] button: {=bool}", name, pressed);
+                    last_pressed = pressed;
+                    ENCODER_STATE.lock(|s| {
+                        let mut state = s.get();
+                        match side {
+                            Side::Left => state.left_pressed = pressed,
+                            Side::Right => state.right_pressed = pressed,
+                        }
+                        s.set(state);
+                    });
+                }
+            }
+            Err(_) => warn!("[{}] button: read error", name),
+        }
+
         Timer::after_millis(POLL_INTERVAL_MS).await;
     }
 }

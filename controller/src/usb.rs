@@ -18,7 +18,12 @@ pub async fn usb_task(mut usb: UsbDevice<'static, Driver<'static, USB>>) {
 /// Read encoder positions and send them over USB CDC ACM as COBS-framed postcard messages.
 #[embassy_executor::task]
 pub async fn usb_write_task(mut class: CdcAcmClass<'static, Driver<'static, USB>>) {
-    let mut last = EncoderState { left: 0, right: 0 };
+    let mut last = EncoderState {
+        left: 0,
+        right: 0,
+        left_pressed: false,
+        right_pressed: false,
+    };
 
     loop {
         info!("USB wait connection");
@@ -28,10 +33,10 @@ pub async fn usb_write_task(mut class: CdcAcmClass<'static, Driver<'static, USB>
         loop {
             let current = ENCODER_STATE.lock(|s| s.get());
 
-            if current.left != last.left || current.right != last.right {
+            if current != last {
                 info!(
-                    "Sending encoder state: left={=i32}, right={=i32}",
-                    current.left, current.right
+                    "Sending encoder state: left={=i32} right={=i32} lp={=bool} rp={=bool}",
+                    current.left, current.right, current.left_pressed, current.right_pressed
                 );
                 last = current;
 

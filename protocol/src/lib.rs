@@ -6,6 +6,8 @@ use serde::{Deserialize, Serialize};
 pub struct EncoderState {
     pub left: i32,
     pub right: i32,
+    pub left_pressed: bool,
+    pub right_pressed: bool,
 }
 
 /// Encode an EncoderState into a COBS-framed postcard message.
@@ -68,7 +70,12 @@ mod tests {
 
     #[test]
     fn round_trip_zeros() {
-        let state = EncoderState { left: 0, right: 0 };
+        let state = EncoderState {
+            left: 0,
+            right: 0,
+            left_pressed: false,
+            right_pressed: false,
+        };
         let mut buf = [0u8; 32];
         let len = encode(&state, &mut buf).unwrap();
         assert!(len > 0);
@@ -85,6 +92,8 @@ mod tests {
         let state = EncoderState {
             left: 42,
             right: 100,
+            left_pressed: true,
+            right_pressed: false,
         };
         let mut buf = [0u8; 32];
         let len = encode(&state, &mut buf).unwrap();
@@ -100,6 +109,8 @@ mod tests {
         let state = EncoderState {
             left: -99,
             right: -1,
+            left_pressed: false,
+            right_pressed: true,
         };
         let mut buf = [0u8; 32];
         let len = encode(&state, &mut buf).unwrap();
@@ -115,6 +126,8 @@ mod tests {
         let state = EncoderState {
             left: i32::MAX,
             right: i32::MIN,
+            left_pressed: true,
+            right_pressed: true,
         };
         let mut buf = [0u8; 32];
         let len = encode(&state, &mut buf).unwrap();
@@ -127,10 +140,17 @@ mod tests {
 
     #[test]
     fn decode_multiple_messages_in_stream() {
-        let s1 = EncoderState { left: 1, right: 2 };
+        let s1 = EncoderState {
+            left: 1,
+            right: 2,
+            left_pressed: false,
+            right_pressed: false,
+        };
         let s2 = EncoderState {
             left: -3,
             right: 4,
+            left_pressed: true,
+            right_pressed: false,
         };
 
         let mut wire = [0u8; 64];
@@ -150,6 +170,8 @@ mod tests {
         let state = EncoderState {
             left: 10,
             right: 20,
+            left_pressed: false,
+            right_pressed: true,
         };
         let mut buf = [0u8; 32];
         let len = encode(&state, &mut buf).unwrap();

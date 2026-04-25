@@ -38,8 +38,14 @@ type Flash = embassy_rp::flash::Flash<'static, embassy_rp::peripherals::FLASH, A
 type FlashMutex = Mutex<NoopRawMutex, RefCell<Flash>>;
 type DfuPart = BlockingPartition<'static, NoopRawMutex, Flash>;
 
-pub static ENCODER_STATE: Mutex<CriticalSectionRawMutex, Cell<EncoderState>> =
-    Mutex::new(Cell::new(EncoderState { left: 0, right: 0 }));
+pub static ENCODER_STATE: Mutex<CriticalSectionRawMutex, Cell<EncoderState>> = Mutex::new(
+    Cell::new(EncoderState {
+        left: 0,
+        right: 0,
+        left_pressed: false,
+        right_pressed: false,
+    }),
+);
 
 bind_interrupts!(struct Irqs {
     USBCTRL_IRQ => UsbInterruptHandler<USB>;
