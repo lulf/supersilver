@@ -1583,6 +1583,7 @@ dependencies = [
  "embassy-usb",
  "embassy-usb-dfu",
  "embedded-hal 1.0.0",
+ "embedded-storage",
  "panic-probe",
  "portable-atomic",
  "postcard",

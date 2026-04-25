@@ -21,6 +21,7 @@ pub async fn usb_write_task(mut class: CdcAcmClass<'static, Driver<'static, USB>
     let mut last = EncoderState { left: 0, right: 0 };
 
     loop {
+        info!("USB wait connection");
         class.wait_connection().await;
         info!("USB CDC ACM connected");
 

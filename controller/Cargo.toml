@@ -17,7 +17,8 @@ embassy-usb = { version = "0.6", features = ["defmt"] }
 embassy-sync = { version = "0.8", features = ["defmt"] }
 embassy-boot-rp = { version = "0.10", features = ["defmt"] }
 embassy-embedded-hal = { version = "0.6" }
-embassy-usb-dfu = { version = "0.3", features = ["dfu", "cortex-m"] }
+embassy-usb-dfu = { version = "0.3", features = ["cortex-m", "application"] }
+embedded-storage = "0.3"
 supersilver-protocol = { path = "../protocol" }
 postcard = "1"
 adafruit-seesaw = { version = "0.13.0", features = ["defmt"] }
